@@ -68,7 +68,7 @@ for x in data_quality.home.unique():
         else:
             data_quality.at[index, 'away_rolling_avg_xG'] = row['rolling_avg_xG']
 
-# Cleean rows with nulls rolling averages
+# Clean rows with nulls rolling averages
 data_quality = data_quality.dropna(subset=['home_rolling_avg_goals', 'away_rolling_avg_goals', 'home_rolling_avg_xG', 'away_rolling_avg_xG'])
 
 # Save transformed features
