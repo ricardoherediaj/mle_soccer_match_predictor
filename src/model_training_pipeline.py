@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, confusion_matrix
 import xgboost as xgb
-import pickle  # Import pickle for saving model in .pkl format
+import pickle  
 from dotenv import load_dotenv
 from paths import PARENT_DIR
 from comet_ml import Experiment
@@ -63,11 +63,11 @@ y_test_encoded = label_encoder.transform(y_test)
 
 # Train XGBoost model
 params = {
-    'n_estimators': 100,
-    'max_depth': 5,
-    'learning_rate': 0.1,
-    'subsample': 0.8,
-    'colsample_bytree': 0.8,
+    'n_estimators': 79,
+    'max_depth': 10,
+    'learning_rate': 0.054,
+    'subsample': 0.614,
+    'colsample_bytree': 0.966,
     'objective': 'multi:softprob',
     'eval_metric': 'mlogloss'
 }
@@ -83,23 +83,33 @@ print(f'XGBoost Accuracy: {accuracy:.4f}')
 print('XGBoost Confusion Matrix:')
 print(conf_matrix)
 
-# Model registry in Comet
-experiment.log_model("xgboost_la_liga_model", model)
-experiment.log_confusion_matrix(matrix=conf_matrix)
-experiment.log_metric("accuracy", accuracy)
+# Log confusion matrix to Comet
+experiment.log_confusion_matrix(
+    matrix=conf_matrix,
+    labels=["Home win", "Draw", "Away win"],  # Class labels
+    index_to_example_function=None,  
+    file_name="xgboost_confusion_matrix.json", 
+)
 
-# Save model in local as JSON
+# Save model in local as JSON and PKL
 model_directory = '/Users/ricardoheredia/Desktop/mle-soccer-project/models'
-model_json_path = os.path.join(model_directory, 'xgboost_la_liga_model.json')
+
+model_json_path = os.path.join(model_directory, 'xgboost_la_liga_model_optuna.json')
 model.save_model(model_json_path)
 print(f"Model saved as JSON to {model_json_path}")
 
-# Save model in local as .pkl
-model_pkl_path = os.path.join(model_directory, 'xgboost_la_liga_model.pkl')
+model_pkl_path = os.path.join(model_directory, 'xgboost_la_liga_model_optuna.pkl')
 with open(model_pkl_path, 'wb') as file:
     pickle.dump(model, file)
 print(f"Model saved as PKL to {model_pkl_path}")
 
 # Upload model to Comet
-experiment.log_asset(file_data=model_json_path, file_name='xgboost_la_liga_model.json')
+experiment.log_asset(file_data=model_json_path, file_name='xgboost_la_liga_model_optuna.json')
+experiment.log_asset(file_data=model_pkl_path, file_name='xgboost_la_liga_model_optuna.pkl')
+
+# Log the accuracy metric to Comet
+experiment.log_metric("accuracy", accuracy)
+
+# Finalize and close Comet experiment
+experiment.end()
 

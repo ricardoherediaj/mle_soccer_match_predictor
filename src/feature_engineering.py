@@ -77,7 +77,7 @@ output_path_data_transformed = TRANSFORMED_DATA_DIR / 'data_transformed_test.csv
 data_transformed.to_csv(output_path_data_transformed, index=False)
 print(f"Data saved to {output_path_data_transformed}")
 
-# Upsert features to Hopsworks
+# Upsert features to Hopsworks and create a Feature View
 import hopsworks
 
 project = hopsworks.login(
@@ -99,3 +99,11 @@ feature_group = feature_store.get_or_create_feature_group(
 )
 
 feature_group.insert(data_transformed, write_options={"wait_for_job": False})
+
+# Create a Feature View
+feature_view = feature_store.create_feature_view(
+    name="la_liga_feature_view",
+    version=1,
+    query=feature_group.select_all(),
+    description="Feature view for La Liga match predictions"
+)
